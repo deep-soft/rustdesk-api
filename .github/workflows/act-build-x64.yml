@@ -4,6 +4,10 @@ name: act-Build
 on:
   workflow_dispatch:
     inputs:
+      PROG_VERSION:
+        description: 'version'
+        required: true
+        default: 'v2.6.10'
       BASE_IMAGE_NAMESPACE:
         description: 'Base image namespace (Default: Your Github username)'
         required: false
@@ -18,6 +22,7 @@ on:
 #      - 'test*'
 
 env:
+  PROG_VERSION:  ${{ github.event.inputs.PROG_VERSION || 'v2.6.10' }}
   LATEST_TAG: latest
   WEBCLIENT_SOURCE_LOCATION: ${{ github.event.inputs.WEBCLIENT_SOURCE_LOCATION || 'https://github.com/deep-soft/rustdesk-api-web' }}
   BASE_IMAGE_NAMESPACE: ${{ github.event.inputs.BASE_IMAGE_NAMESPACE || github.actor }}
@@ -67,9 +72,11 @@ jobs:
 
       - name: Get tag version
         run: |
-          TAG_VERSION="${GITHUB_REF##*/}"
+          # TAG_VERSION="${GITHUB_REF##*/}"
+          TAG_VERSION="${{ env.PROG_VERSION }}"
           VERSION="${TAG_VERSION#v}" 
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION"
 
       - name: Write version to resources/version
         run:  echo $VERSION > resources/version
@@ -111,6 +118,7 @@ jobs:
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
+          #tag_name: ${{ env.VERSION }}
           files: |
             ${{ matrix.job.goos}}-${{ matrix.job.platform }}.${{matrix.job.file_ext}}
         env:
@@ -146,10 +154,12 @@ jobs:
       - name: Get tag version
         id: get_tag
         run: |
-          TAG_VERSION="${GITHUB_REF##*/}"
+          # TAG_VERSION="${GITHUB_REF##*/}"
+          TAG_VERSION="${{ env.PROG_VERSION }}"
           VERSION="${TAG_VERSION#v}" 
           echo "TAG_VERSION=$TAG_VERSION" >> $GITHUB_ENV
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION"
 
       - name: Update changelog
         run: |
@@ -189,5 +199,6 @@ jobs:
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
+          #tag_name: ${{ env.VERSION }}
           files: |
             debian-build/rustdesk-api-server_*_${{ matrix.job.debian_platform }}.deb
