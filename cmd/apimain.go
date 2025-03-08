@@ -18,7 +18,6 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"strconv"
-	"time"
 )
 
 // @title 管理系统API
@@ -52,6 +51,10 @@ var resetPwdCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		pwd := args[0]
 		admin := service.AllService.UserService.InfoById(1)
+		if admin.Id == 0 {
+			global.Logger.Warn("user not found! ")
+			return
+		}
 		err := service.AllService.UserService.UpdatePassword(admin, pwd)
 		if err != nil {
 			global.Logger.Error("reset password fail! ", err)
@@ -78,6 +81,10 @@ var resetUserPwdCmd = &cobra.Command{
 			return
 		}
 		u := service.AllService.UserService.InfoById(uint(uid))
+		if u.Id == 0 {
+			global.Logger.Warn("user not found! ")
+			return
+		}
 		err = service.AllService.UserService.UpdatePassword(u, pwd)
 		if err != nil {
 			global.Logger.Warn("reset password fail! ", err)
@@ -145,7 +152,6 @@ func InitGlobal() {
 			MaxOpenConns: global.Config.Gorm.MaxOpenConns,
 		})
 	}
-	DatabaseAutoUpdate()
 
 	//validator
 	global.ApiInitValidator()
@@ -162,13 +168,17 @@ func InitGlobal() {
 
 	//jwt
 	//fmt.Println(global.Config.Jwt.PrivateKey)
-	global.Jwt = jwt.NewJwt(global.Config.Jwt.Key, global.Config.Jwt.ExpireDuration*time.Second)
-
+	global.Jwt = jwt.NewJwt(global.Config.Jwt.Key, global.Config.Jwt.ExpireDuration)
 	//locker
 	global.Lock = lock.NewLocal()
+
+	//service
+	service.New(&global.Config, global.DB, global.Logger, global.Jwt, global.Lock)
+
+	DatabaseAutoUpdate()
 }
 func DatabaseAutoUpdate() {
-	version := 260
+	version := 262
 
 	db := global.DB
 
@@ -212,6 +222,7 @@ func DatabaseAutoUpdate() {
 		if v.Version < uint(version) {
 			Migrate(uint(version))
 		}
+
 		// 245迁移
 		if v.Version < 245 {
 			//oauths 表的 oauth_type 字段设置为 op同样的值
@@ -234,7 +245,7 @@ func DatabaseAutoUpdate() {
 
 }
 func Migrate(version uint) {
-	global.Logger.Info("migrating....", version)
+	global.Logger.Info("Migrating....", version)
 	err := global.DB.AutoMigrate(
 		&model.Version{},
 		&model.User{},
@@ -252,6 +263,7 @@ func Migrate(version uint) {
 		&model.AddressBookCollection{},
 		&model.AddressBookCollectionRule{},
 		&model.ServerCmd{},
+		&model.DeviceGroup{},
 	)
 	if err != nil {
 		global.Logger.Error("migrate err :=>", err)

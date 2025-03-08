@@ -43,20 +43,22 @@ func (o *Oauth) ToBind(c *gin.Context) {
 		return
 	}
 
-	err, code, url := service.AllService.OauthService.BeginAuth(f.Op)
+	err, state, verifier, nonce, url := service.AllService.OauthService.BeginAuth(f.Op)
 	if err != nil {
 		response.Error(c, response.TranslateMsg(c, err.Error()))
 		return
 	}
 
-	service.AllService.OauthService.SetOauthCache(code, &service.OauthCacheItem{
-		Action: service.OauthActionTypeBind,
-		Op:     f.Op,
-		UserId: u.Id,
+	service.AllService.OauthService.SetOauthCache(state, &service.OauthCacheItem{
+		Action:   service.OauthActionTypeBind,
+		Op:       f.Op,
+		UserId:   u.Id,
+		Verifier: verifier,
+		Nonce:    nonce,
 	}, 5*60)
 
 	response.Success(c, gin.H{
-		"code": code,
+		"code": state,
 		"url":  url,
 	})
 }

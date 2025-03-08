@@ -18,6 +18,8 @@ func ApiInit(g *gin.Engine) {
 	if global.Config.App.ShowSwagger == 1 {
 		g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.InstanceName("api")))
 	}
+	// 加载 HTML 模板
+	g.LoadHTMLGlob("resources/templates/*")
 
 	frg := g.Group("/api")
 
@@ -79,6 +81,8 @@ func ApiInit(g *gin.Engine) {
 		gr := &api.Group{}
 		frg.GET("/users", gr.Users)
 		frg.GET("/peers", gr.Peers)
+		// /api/device-group/accessible?current=1&pageSize=100
+		frg.GET("/device-group/accessible", gr.Device)
 	}
 
 	{
@@ -88,6 +92,7 @@ func ApiInit(g *gin.Engine) {
 		//更新地址
 		frg.POST("/ab", ab.UpAb)
 	}
+
 	PersonalRoutes(frg)
 	//访问静态文件
 	g.StaticFS("/upload", http.Dir(global.Config.Gin.ResourcesPath+"/public/upload"))
