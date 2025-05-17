@@ -7,7 +7,7 @@ on:
       PROG_VERSION:
         description: 'version'
         required: true
-        default: 'v2.6.10'
+        default: 'v2.6.20'
       BASE_IMAGE_NAMESPACE:
         description: 'Base image namespace (Default: Your Github username)'
         required: false
@@ -16,13 +16,13 @@ on:
         description: 'Web Client API Repository'
         required: true
         default: 'https://github.com/deep-soft/rustdesk-api-web'
-#  push:
-#    tags:
-#      - 'v*.*.*'
-#      - 'test*'
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'test*'
 
 env:
-  PROG_VERSION:  ${{ github.event.inputs.PROG_VERSION || 'v2.6.10' }}
+  PROG_VERSION:  ${{ github.event.inputs.PROG_VERSION || 'v2.6.20' }}
   LATEST_TAG: latest
   WEBCLIENT_SOURCE_LOCATION: ${{ github.event.inputs.WEBCLIENT_SOURCE_LOCATION || 'https://github.com/deep-soft/rustdesk-api-web' }}
   BASE_IMAGE_NAMESPACE: ${{ github.event.inputs.BASE_IMAGE_NAMESPACE || github.actor }}
@@ -73,12 +73,20 @@ jobs:
         run: go mod tidy
 
       - name: Get tag version
+        shell: bash
         run: |
           # TAG_VERSION="${GITHUB_REF##*/}"
-          TAG_VERSION="${{ env.PROG_VERSION }}"
+          THE_TAG_VERSION="${GITHUB_REF##*/}"
+          if [[ "$THE_TAG_VERSION" != "master" ]]; then
+            TAG_VERSION=$THE_TAG_VERSION;
+          else
+            TAG_VERSION="${{ env.PROG_VERSION }}";
+          fi
           VERSION="${TAG_VERSION#v}" 
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "VERSION=$VERSION"
+          echo "TAG_VERSION=$TAG_VERSION" >> $GITHUB_ENV
+          echo "TAG_VERSION=$TAG_VERSION"
 
       - name: Write version to resources/version
         run:  echo $VERSION > resources/version
