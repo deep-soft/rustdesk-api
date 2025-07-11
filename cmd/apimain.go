@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/lejianwen/rustdesk-api/v2/config"
 	"github.com/lejianwen/rustdesk-api/v2/global"
@@ -17,10 +21,9 @@ import (
 	"github.com/lejianwen/rustdesk-api/v2/utils"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/spf13/cobra"
-	"os"
-	"strconv"
-	"time"
 )
+
+const DatabaseVersion = 264
 
 // @title 管理系统API
 // @version 1.0
@@ -210,7 +213,7 @@ func InitGlobal() {
 }
 
 func DatabaseAutoUpdate() {
-	version := 262
+	version := DatabaseVersion
 
 	db := global.DB
 
@@ -342,7 +345,11 @@ func Migrate(version uint) {
 		// 生成随机密码
 		pwd := utils.RandomString(8)
 		global.Logger.Info("Admin Password Is: ", pwd)
-		admin.Password = service.AllService.UserService.EncryptPassword(pwd)
+		var err error
+		admin.Password, err = utils.EncryptPassword(pwd)
+		if err != nil {
+			global.Logger.Fatalf("failed to generate admin password: %v", err)
+		}
 		global.DB.Create(admin)
 	}
 

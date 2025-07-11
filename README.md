@@ -94,8 +94,8 @@
     - 对于`OIDC`, `Issuer`是必须的。`Scopes`是可选的，默认为 `openid,profile,email`. 确保可以获取 `sub`,`email` 和`preferred_username`
     - `github oauth app`在`Settings`->`Developer settings`->`OAuth Apps`->`New OAuth App`
       中创建,地址 [https://github.com/settings/developers](https://github.com/settings/developers)
-    - `Authorization callback URL`填写`http://<your server[:port]>/api/oauth/callback`
-      ，比如`http://127.0.0.1:21114/api/oauth/callback`
+    - `Authorization callback URL`填写`http://<your server[:port]>/api/oidc/callback`
+      ，比如`http://127.0.0.1:21114/api/oidc/callback`
 7. 登录日志
 8. 链接日志
 9. 文件传输日志
@@ -255,6 +255,12 @@
     #或者使用generate_api.go生成api并运行
     go generate generate_api.go
     ```
+   > 注意：使用 `go run` 或编译后的二进制时，当前目录下必须存在 `conf` 和 `resources`
+   > 目录。如果在其他目录运行，可通过 `-c` 和环境变量
+   > `RUSTDESK_API_GIN_RESOURCES_PATH` 指定绝对路径，例如：
+   > ```bash
+   > RUSTDESK_API_GIN_RESOURCES_PATH=/opt/rustdesk-api/resources ./apimain -c /opt/rustdesk-api/conf/config.yaml
+   > ```
 5. 编译，如果想自己编译,先cd到项目根目录，然后windows下直接运行`build.bat`,linux下运行`build.sh`,编译后会在`release`
    目录下生成对应的可执行文件。直接运行编译后的可执行文件即可。
 
