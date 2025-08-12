@@ -179,13 +179,20 @@ jobs:
 
       - name: Get tag version
         id: get_tag
+        shell: bash
         run: |
           # TAG_VERSION="${GITHUB_REF##*/}"
-          TAG_VERSION="${{ env.PROG_VERSION }}"
+          THE_TAG_VERSION="${GITHUB_REF##*/}"
+          if [[ "$THE_TAG_VERSION" != "master" ]]; then
+            TAG_VERSION=$THE_TAG_VERSION;
+          else
+            TAG_VERSION="${{ env.PROG_VERSION }}";
+          fi
           VERSION="${TAG_VERSION#v}" 
-          echo "TAG_VERSION=$TAG_VERSION" >> $GITHUB_ENV
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "VERSION=$VERSION"
+          echo "TAG_VERSION=$TAG_VERSION" >> $GITHUB_ENV
+          echo "TAG_VERSION=$TAG_VERSION"
 
       - name: Update changelog
         run: |
